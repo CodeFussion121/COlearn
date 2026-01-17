@@ -22,6 +22,7 @@ import Leaderboard from '../components/Leaderboard';
 import SmartNudge from '../components/SmartNudge';
 import AchievementShowcase from '../components/AchievementShowcase';
 import RecentActivity from '../components/RecentActivity';
+import ScheduleMeeting from '../components/ScheduleMeeting';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -299,6 +300,9 @@ const Dashboard = () => {
                                 Social Hub
                             </Typography>
                         </Box>
+
+                        {/* Squad Meeting Scheduler */}
+                        <ScheduleMeeting />
 
                         {/* Leaderboard (Social Proof) */}
                         <Leaderboard />

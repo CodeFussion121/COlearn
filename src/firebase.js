@@ -25,6 +25,7 @@ if (isConfigValid) {
         auth = getAuth(app);
         db = getFirestore(app);
         googleProvider = new GoogleAuthProvider();
+        googleProvider.addScope('https://www.googleapis.com/auth/calendar');
     } catch (error) {
         console.error("Firebase initialization failed:", error);
     }

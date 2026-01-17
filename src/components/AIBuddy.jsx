@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import useGemini from '../hooks/useGemini';
 import { Box, Fab, Paper, Typography, Fade, IconButton, TextField, Avatar, CircularProgress, Chip, Drawer } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import CloseIcon from '@mui/icons-material/Close';
@@ -13,7 +14,7 @@ const AIBuddy = ({ level }) => {
     const [messages, setMessages] = useState([
         { role: 'assistant', content: "Hey! I'm your Grid Guide. I'm here to help you crush your study goals and squads missions. Stuck on a concept or need a quest idea?" }
     ]);
-    const [loading, setLoading] = useState(false);
+    const { askGemini, loading } = useGemini();
     const scrollRef = useRef(null);
 
     useEffect(() => {
@@ -28,36 +29,22 @@ const AIBuddy = ({ level }) => {
         const userMsg = { role: 'user', content: input };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
-        setLoading(true);
 
         try {
-            // System Prompt Context (Hidden)
-            const systemContext = "You are a calm study commander. You guide, nudge, and recommend. You never overwhelm. You focus on one improvement at a time. Keep responses under 50 words.";
+            // System Prompt Context
+            const systemContext = "You are a calm study commander (Omnis AI) for a gamified learning platform. You guide, nudge, and recommend. You never overwhelm. You focus on one improvement at a time. Keep responses concise (under 50 words).";
 
-            // In a real app, this prompt would be sent to the API.
-            // For now, we simulate the persona in getMockResponse.
-            setTimeout(() => {
-                const botMsg = { role: 'assistant', content: getMockResponse(input) };
+            const prompt = `${systemContext}\n\nUser: ${input}\nOmnis AI:`;
+
+            const result = await askGemini(prompt);
+
+            if (result) {
+                const botMsg = { role: 'assistant', content: result };
                 setMessages(prev => [...prev, botMsg]);
-                setLoading(false);
-            }, 1000);
+            }
         } catch (error) {
             console.error("Bot Error:", error);
-            setLoading(false);
         }
-    };
-
-    const getMockResponse = (text) => {
-        const lower = text.toLowerCase();
-
-        // Persona: Study Coach & Motivator
-        if (lower.includes('quest') || lower.includes('mission')) return "I recommend 'The Archive Dive' (Level 5). It fits your current streak. Grab a squadmate for double XP. Want me to mark it on your map?";
-        if (lower.includes('stuck') || lower.includes('help')) return "No worries. Break it down. What's the specific blocker? If it's code, share the snippet. If it's a concept, I'll simplify it.";
-        if (lower.includes('level') || lower.includes('xp')) return `You're currently Level ${level}. You need about 450 XP for the next rank. Try the Daily Quiz for a quick boost!`;
-        if (lower.includes('tired') || lower.includes('boring')) return "Take a breather. Even elite players need regen time. How about a 5-minute 'Focus Zone' session to reset?";
-        if (lower.includes('stack') || lower.includes('heap')) return "Think of the Stack like a pile of books (LIFO - Last In, First Out). The Heap is like a messy laundry pile (random access). Which one do you think is faster?";
-
-        return "Got it. I'm listening. We can tackle this together. What's the main goal right now?";
     };
 
     return (

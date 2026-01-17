@@ -3,7 +3,7 @@ import { Box, Button, Typography, Container, Fade, CircularProgress, Paper } fro
 import GoogleIcon from '@mui/icons-material/Google';
 import { useNavigate } from 'react-router-dom';
 import { auth, googleProvider } from '../firebase';
-import { signInWithPopup } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import GlassCard from '../components/GlassCard';
@@ -18,6 +18,11 @@ const Login = () => {
         setError(null);
         try {
             const result = await signInWithPopup(auth, googleProvider);
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential.accessToken;
+            if (token) {
+                sessionStorage.setItem('googleAccessToken', token);
+            }
             const user = result.user;
 
             const userDoc = await getDoc(doc(db, 'users', user.uid));
