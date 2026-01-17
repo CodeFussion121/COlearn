@@ -1,111 +1,192 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db, auth } from '../firebase';
+import { doc, onSnapshot, updateDoc, increment, arrayUnion } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const GamificationContext = createContext();
 
 export const useGamification = () => useContext(GamificationContext);
 
 export const GamificationProvider = ({ children }) => {
-    // Initial State from LocalStorage or Defaults
-    const [stats, setStats] = useState(() => {
-        const saved = localStorage.getItem('userStats');
-        const defaultBadges = [
-            { id: 'bug_slayer', name: 'Bug Slayer', icon: '🐞', unlocked: false, requirement: 'Complete 3 Battle Quests' },
-            { id: 'explain_wizard', name: 'Explain Wizard', icon: '🧙‍♂️', unlocked: false, requirement: 'Complete 5 Explain Quests' },
-            { id: 'squad_mvp', name: 'Squad MVP', icon: '👑', unlocked: false, requirement: 'Reach Level 5' }
-        ];
-
-        return saved ? JSON.parse(saved) : {
-            xp: 0,
-            level: 1,
-            streak: 1,
-            titles: ['Novice'],
-            currentTitle: 'Novice',
-            badges: defaultBadges
-        };
+    const [user, setUser] = useState(null);
+    const [stats, setStats] = useState({
+        xp: 0,
+        level: 1,
+        streak: 1,
+        badges: [],
+        currentTitle: 'Novice',
+        coins: 100,
+        energy: 100,
+        maxEnergy: 100,
+        lastEnergyRefill: Date.now()
     });
 
-    const [soundEnabled, setSoundEnabled] = useState(true);
-    const [rewardQueue, setRewardQueue] = useState([]); // For Micro-rewards
+    // Updated Daily Challenge State with Quiz
     const [dailyChallenge, setDailyChallenge] = useState({
-        text: "Explain 'Recursion' in 1 sentence.",
+        text: "Explain stack vs heap in 3 lines",
         completed: false,
-        reward: 50
+        xp: 150,
+        coins: 50,
+        quizQuestion: "Which memory region is automatically managed by the CPU?",
+        options: ["Heap", "Stack", "Hard Drive", "Cloud"],
+        correctAnswer: "Stack"
     });
 
-    // Persist stats
+    const [rewardQueue, setRewardQueue] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [soundEnabled, setSoundEnabled] = useState(true);
+
+    // Energy Refill Logic
     useEffect(() => {
-        localStorage.setItem('userStats', JSON.stringify(stats));
-    }, [stats]);
+        const interval = setInterval(() => {
+            setStats(prev => {
+                if (prev.energy < prev.maxEnergy) {
+                    const newEnergy = Math.min(prev.maxEnergy, prev.energy + 1);
+                    return { ...prev, energy: newEnergy };
+                }
+                return prev;
+            });
+        }, 60000); // 1 energy per minute
+
+        return () => clearInterval(interval);
+    }, []);
+
+    // Auth & stats sync
+    useEffect(() => {
+        if (!auth) {
+            setLoading(false);
+            return;
+        }
+        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            if (currentUser && db) {
+                const userRef = doc(db, 'users', currentUser.uid);
+                const unsubscribeStats = onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        setStats(prev => ({
+                            ...prev,
+                            ...data,
+                            energy: data.energy ?? prev.energy,
+                            coins: data.coins ?? prev.coins
+                        }));
+                    }
+                    setLoading(false);
+                });
+                return () => unsubscribeStats();
+            } else {
+                setStats({ xp: 0, level: 1, streak: 1, badges: [], currentTitle: 'Novice', coins: 100, energy: 100, maxEnergy: 100 });
+                setLoading(false);
+            }
+        });
+        return () => unsubscribeAuth();
+    }, []);
 
     const playSound = (type) => {
         if (!soundEnabled) return;
-        // Mock sound handling - in real app would play actual audio files
-        // const audio = new Audio(`/sounds/${type}.mp3`);
-        // audio.play();
-        console.log(`🎵 Playing sound: ${type}`);
+        console.log(`[SFX] Playing: ${type}`);
     };
 
-    const completeDailyChallenge = () => {
-        if (!dailyChallenge.completed) {
-            setDailyChallenge(prev => ({ ...prev, completed: true }));
-            awardXP(dailyChallenge.reward, "Daily Win");
-            playSound('success'); // Assuming we have or will map this
-        }
+    const addReward = (reward) => {
+        setRewardQueue(prev => [...prev, { id: Date.now(), ...reward }]);
     };
-
-    const awardXP = (amount, reason) => {
-        let rewardsToAdd = []; // Collect rewards to add to queue
-
-        setStats(prev => {
-            const newXP = prev.xp + amount;
-            const newLevel = 1 + Math.floor(newXP / 1000); // Simple linear leveling for now
-            let newBadges = [...prev.badges];
-
-            // Check Level Up
-            if (newLevel > prev.level) {
-                playSound('levelup');
-                rewardsToAdd.push({ id: Date.now(), type: 'levelup', message: `Leveled Up to ${newLevel}!` });
-
-                // Unlock Squad MVP at Level 5
-                const squadMvpBadge = newBadges.find(b => b.id === 'squad_mvp');
-                if (newLevel >= 5 && squadMvpBadge && !squadMvpBadge.unlocked) {
-                    newBadges = newBadges.map(b => b.id === 'squad_mvp' ? { ...b, unlocked: true } : b);
-                    rewardsToAdd.push({ id: Date.now() + 100, type: 'badge', message: 'Badge Unlocked: Squad MVP!' });
-                }
-            } else {
-                playSound('xp_gain');
-                rewardsToAdd.push({ id: Date.now(), type: 'xp', message: `+${amount} XP: ${reason}` });
-            }
-
-            return {
-                ...prev,
-                xp: newXP,
-                level: newLevel,
-                badges: newBadges
-            };
-        });
-
-        // Update reward queue after stats are potentially updated
-        setRewardQueue(q => [...q, ...rewardsToAdd]);
-    };
-
-    const toggleSound = () => setSoundEnabled(prev => !prev);
 
     const clearReward = (id) => {
         setRewardQueue(prev => prev.filter(r => r.id !== id));
     };
 
+    const awardXP = async (amount, reason, coinsEarned = 0) => {
+        if (!user) return;
+        const userRef = doc(db, 'users', user.uid);
+
+        try {
+            const newXP = stats.xp + amount;
+            const newLevel = 1 + Math.floor(newXP / 1000);
+
+            const updateData = {
+                xp: increment(amount),
+                coins: increment(coinsEarned)
+            };
+
+            if (newLevel > stats.level) {
+                updateData.level = newLevel;
+                addReward({ type: 'levelup', message: `Leveled Up to ${newLevel}!` });
+                playSound('levelup');
+            } else {
+                addReward({ type: 'xp', message: `+${amount} XP: ${reason}` });
+                if (coinsEarned > 0) {
+                    addReward({ type: 'coins', message: `+${coinsEarned} Coins earned!` });
+                }
+                playSound('xp');
+            }
+
+            await updateDoc(userRef, updateData);
+        } catch (error) {
+            console.error("Failed to award XP:", error);
+        }
+    };
+
+    const consumeEnergy = async (amount) => {
+        if (!user || stats.energy < amount) return false;
+
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                energy: stats.energy - amount,
+                lastEnergyRefill: Date.now()
+            });
+            return true;
+        } catch (error) {
+            console.error("Failed to consume energy:", error);
+            return false;
+        }
+    };
+
+    const unlockBadge = async (badgeId, badgeName, icon) => {
+        if (!user || !db) return;
+        const userRef = doc(db, 'users', user.uid);
+
+        try {
+            const badge = { id: badgeId, name: badgeName, icon, unlockedAt: new Date().toISOString() };
+            await updateDoc(userRef, {
+                badges: arrayUnion(badge)
+            });
+            addReward({ type: 'badge', message: `Achievement Unlocked: ${badgeName}!` });
+            playSound('badge');
+        } catch (error) {
+            console.error("Failed to unlock badge:", error);
+        }
+    };
+
+    // New Quiz-Based Completion Logic
+    const completeDailyChallenge = async (userAnswer) => {
+        if (dailyChallenge.completed) return { success: true, message: "Already completed!" };
+
+        if (userAnswer === dailyChallenge.correctAnswer) {
+            setDailyChallenge(prev => ({ ...prev, completed: true }));
+            await awardXP(dailyChallenge.xp, "Daily Mission Ace", dailyChallenge.coins);
+            return { success: true, message: "Correct! Mission Complete." };
+        } else {
+            return { success: false, message: "Incorrect. Try again!" };
+        }
+    };
+
+    const toggleSound = () => setSoundEnabled(!soundEnabled);
+
     return (
         <GamificationContext.Provider value={{
             stats,
-            soundEnabled,
-            toggleSound,
             awardXP,
+            consumeEnergy,
+            unlockBadge,
+            dailyChallenge,
+            completeDailyChallenge,
             rewardQueue,
             clearReward,
-            dailyChallenge,
-            completeDailyChallenge
+            soundEnabled,
+            toggleSound,
+            loading,
+            user
         }}>
             {children}
         </GamificationContext.Provider>

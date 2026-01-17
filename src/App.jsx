@@ -1,9 +1,10 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import theme from "./theme/theme";
+import { CustomThemeProvider } from "./theme/ThemeContext";
+import { GamificationProvider } from "./context/GamificationContext";
+import { ExamModeProvider } from "./context/ExamModeContext";
+
 import Login from "./pages/Login";
 import Onboarding from "./pages/Onboarding";
 import Dashboard from "./pages/Dashboard";
@@ -12,89 +13,43 @@ import QuestFeed from "./pages/QuestFeed";
 import Journal from "./pages/Journal";
 import AdminQuest from "./pages/AdminQuest";
 import HighlightWall from "./pages/HighlightWall";
-import GamificationBar from "./components/GamificationBar";
-import MoodCheck from "./components/MoodCheck";
-import { GamificationProvider } from "./context/GamificationContext";
-import { ExamModeProvider } from "./context/ExamModeContext";
+import Landing from "./pages/Landing";
+import Intro from "./pages/Intro";
+import Layout from "./components/Layout";
 
 function App() {
   const PrivateRoute = ({ children }) => {
     const isAuthenticated = localStorage.getItem("isAuthenticated") === 'true';
-    return isAuthenticated ? (
-      <>
-        <GamificationBar />
-        <MoodCheck />
-        {children}
-      </>
-    ) : (
-      <Navigate to="/" />
-    );
+    return isAuthenticated ? children : <Navigate to="/login" />;
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <CustomThemeProvider>
       <CssBaseline />
       <GamificationProvider>
         <ExamModeProvider>
           <Router>
             <Routes>
-              <Route
-                path="/quests"
-                element={
-                  <PrivateRoute>
-                    <QuestFeed />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/quest/:id"
-                element={
-                  <PrivateRoute>
-                    <QuestRoom />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/journal"
-                element={
-                  <PrivateRoute>
-                    <Journal />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/highlights"
-                element={
-                  <PrivateRoute>
-                    <HighlightWall />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin"
-                element={
-                  <PrivateRoute>
-                    <AdminQuest />
-                  </PrivateRoute>
-                }
-              />
-
-              {/* Redirects or other routes */}
-              <Route path="/" element={<Login />} />
+              {/* Public Routes */}
+              <Route path="/" element={<Intro />} />
+              <Route path="/about" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<Onboarding />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <Dashboard />
-                  </PrivateRoute>
-                }
-              />
+
+              {/* Protected Routes wrapped in Layout */}
+              <Route element={<PrivateRoute><Layout /></PrivateRoute>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/quests" element={<QuestFeed />} />
+                <Route path="/quest/:id" element={<QuestRoom />} />
+                <Route path="/journal" element={<Journal />} />
+                <Route path="/highlights" element={<HighlightWall />} />
+                <Route path="/admin" element={<AdminQuest />} />
+              </Route>
             </Routes>
           </Router>
         </ExamModeProvider>
       </GamificationProvider>
-    </ThemeProvider >
+    </CustomThemeProvider >
   );
 }
 

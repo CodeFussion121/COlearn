@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Paper, Box, Typography, Chip, Fade } from '@mui/material';
+import { Box, Typography, Fade } from '@mui/material';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import BoltIcon from '@mui/icons-material/Bolt';
 import GroupsIcon from '@mui/icons-material/Groups';
 import PsychologyIcon from '@mui/icons-material/Psychology';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import GlassCard from './GlassCard';
 
 const EVENTS = [
-    { text: "42 students solving DSA right now", icon: <LocalFireDepartmentIcon color="error" />, type: 'hot' },
-    { text: "Squad 'Alpha' just completed Fix-a-Friend Quest", icon: <GroupsIcon color="primary" />, type: 'social' },
-    { text: "Exams coming up! 150 students revising Graphs", icon: <PsychologyIcon color="warning" />, type: 'study' },
-    { text: "New Explain Quest: 'React Hooks' is trending", icon: <BoltIcon color="secondary" />, type: 'trend' },
-    { text: "Rahul just earned 'Bug Slayer' Badge!", icon: <EmojiEventsIcon color="success" />, type: 'achievement' },
+    { text: "128 students mastering DSA right now", icon: <LocalFireDepartmentIcon sx={{ color: '#ef4444' }} />, type: 'hot' },
+    { text: "Squad 'Void' just completed a Level 5 Mission", icon: <GroupsIcon sx={{ color: '#6366f1' }} />, type: 'social' },
+    { text: "Global Event: 300+ students exploring Neural Networks", icon: <PsychologyIcon sx={{ color: '#f59e0b' }} />, type: 'study' },
+    { text: "Quest Unlocked: 'Microservices Architecture' is trending", icon: <BoltIcon sx={{ color: '#a855f7' }} />, type: 'trend' },
+    { text: "User 'Sam' just ascended to Level 10!", icon: <EmojiEventsIcon sx={{ color: '#10b981' }} />, type: 'achievement' },
 ];
-
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 const LiveEnergyWidget = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -25,8 +25,8 @@ const LiveEnergyWidget = () => {
             setTimeout(() => {
                 setCurrentIndex((prev) => (prev + 1) % EVENTS.length);
                 setVisible(true);
-            }, 500); // Wait for fade out
-        }, 4000); // Change every 4 seconds
+            }, 600);
+        }, 5000);
 
         return () => clearInterval(interval);
     }, []);
@@ -34,43 +34,46 @@ const LiveEnergyWidget = () => {
     const currentEvent = EVENTS[currentIndex];
 
     return (
-        <Paper
-            elevation={3}
+        <GlassCard
+            intensity={0.5}
             sx={{
-                p: 1.5,
-                mb: 3,
-                borderRadius: 4,
-                bgcolor: '#1a1a1a', // Dark background for contrast
-                color: 'white',
+                p: 2,
+                mb: 4,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 2,
-                backgroundImage: 'linear-gradient(45deg, #1a1a1a 30%, #2c2c2c 90%)',
-                border: '1px solid #333',
-                overflow: 'hidden',
-                position: 'relative'
+                gap: 3,
+                border: '1px solid rgba(255,255,255,0.05)',
+                boxShadow: '0 4px 30px rgba(0,0,0,0.1)'
             }}
         >
             <Box sx={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 1,
-                bgcolor: '#ff3d00',
-                px: 1,
-                py: 0.5,
+                gap: 1.5,
+                bgcolor: 'rgba(239, 68, 68, 0.1)',
+                color: '#ef4444',
+                px: 2,
+                py: 0.8,
                 borderRadius: 2,
-                fontWeight: 'bold',
-                fontSize: '0.75rem',
-                boxShadow: '0 0 10px #ff3d00'
+                fontWeight: 900,
+                fontSize: '0.7rem',
+                letterSpacing: 1,
             }}>
-                <Box sx={{ width: 8, height: 8, bgcolor: 'white', borderRadius: '50%', animation: 'pulse 1.5s infinite' }} />
-                LIVE
+                <Box sx={{
+                    width: 8,
+                    height: 8,
+                    bgcolor: '#ef4444',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 10px #ef4444',
+                    animation: 'pulse 1.5s infinite'
+                }} />
+                NETWORK LIVE
             </Box>
 
-            <Fade in={visible} timeout={500}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexGrow: 1 }}>
-                    {currentEvent.icon}
-                    <Typography variant="body2" fontWeight="500">
+            <Fade in={visible} timeout={600}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex' }}>{currentEvent.icon}</Box>
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.95rem' }}>
                         {currentEvent.text}
                     </Typography>
                 </Box>
@@ -80,12 +83,12 @@ const LiveEnergyWidget = () => {
                 {`
                 @keyframes pulse {
                     0% { opacity: 1; transform: scale(1); }
-                    50% { opacity: 0.5; transform: scale(1.2); }
+                    50% { opacity: 0.4; transform: scale(1.3); }
                     100% { opacity: 1; transform: scale(1); }
                 }
                 `}
             </style>
-        </Paper>
+        </GlassCard>
     );
 };
 

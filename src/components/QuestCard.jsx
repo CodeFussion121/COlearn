@@ -2,106 +2,119 @@ import React from 'react';
 import { Card, CardContent, Typography, Chip, Button, Box } from '@mui/material';
 import FlashOnIcon from '@mui/icons-material/FlashOn';
 import PsychologyIcon from '@mui/icons-material/Psychology';
-import ConstructionIcon from '@mui/icons-material/Construction'; // For Fix-a-Friend/Tools
-import SportsMmaIcon from '@mui/icons-material/SportsMma'; // For Battle/Swords alternative, or use an SVG
-// Note: standard MUI icons might not have perfect Swords, using SportsMma (Gloves) or similar as proxy or fallback to relevant standard icons.
-// actually let's use:
-// Sprint -> FlashOn
-// Explain -> Psychology (Brain)
-// Fix -> Build (Construction/Tools)
-// Battle -> SportsKabaddi or star? Let's use Hardware for Swords? No, let's use Gavel for battle? Or FlashOff.
-// Let's stick to closest:
-// Battle -> Security or PrivacyTip (Shield)? Or just leave as BugReport if it was about bugs. 
-// User asked for "Battle -> ⚔️". MUI doesn't have Swords. Let's use 'Security' or 'Warning' for now or 'SportsEsports'.
-// Actually, let's use "Gavel" (Authority/Battle) or just stick to a generic "Star". 
-// Wait, I can import specific paths if needed, but sticking to MUI icons:
-// Psychology = Brain
-// Build = Tools
-// FlashOn = Sprint
-// SportsMma = Battle? Or maybe 'Fort' (Castle)? 
-// Let's use 'SportsEsports' for Battle if it's code battle.
+import ConstructionIcon from '@mui/icons-material/Construction';
 import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
-
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import GlassCard from './GlassCard';
 
-const QuestCard = ({ quest }) => {
+const QuestCard = ({ quest, delay = 0 }) => {
     const navigate = useNavigate();
 
     const getTypeConfig = (type) => {
         switch (type) {
-            case 'Sprint Quest': return { icon: <FlashOnIcon />, color: '#4285F4', gradient: 'linear-gradient(135deg, #4285F4 0%, #2962FF 100%)' };
-            case 'Explain Quest': return { icon: <PsychologyIcon />, color: '#0F9D58', gradient: 'linear-gradient(135deg, #0F9D58 0%, #00C853 100%)' };
-            case 'Battle Quest': return { icon: <SportsEsportsIcon />, color: '#DB4437', gradient: 'linear-gradient(135deg, #DB4437 0%, #D50000 100%)' };
-            case 'Fix-a-Friend': return { icon: <ConstructionIcon />, color: '#F4B400', gradient: 'linear-gradient(135deg, #F4B400 0%, #FFD600 100%)' };
-            default: return { icon: <FlashOnIcon />, color: '#5F6368', gradient: 'linear-gradient(135deg, #5F6368 0%, #202124 100%)' };
+            case 'Sprint Quest': return { icon: <FlashOnIcon />, color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' };
+            case 'Explain Quest': return { icon: <PsychologyIcon />, color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' };
+            case 'Battle Quest': return { icon: <SportsEsportsIcon />, color: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' };
+            case 'Fix-a-Friend': return { icon: <ConstructionIcon />, color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' };
+            default: return { icon: <FlashOnIcon />, color: '#94a3b8', gradient: 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)' };
         }
     };
 
     const config = getTypeConfig(quest.type);
 
     return (
-        <motion.div whileHover={{ y: -8, scale: 1.02 }} transition={{ type: 'spring', stiffness: 300 }}>
-            <Card sx={{
-                borderRadius: 4,
-                overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                position: 'relative'
-            }}>
-                {/* Header Strip */}
-                <Box sx={{ height: 6, background: config.gradient }} />
+        <GlassCard
+            delay={delay}
+            sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                '&:hover': {
+                    transform: 'translateY(-10px) scale(1.02)',
+                    boxShadow: `0 30px 60px ${config.color}22`,
+                    borderColor: `${config.color}44`
+                }
+            }}
+        >
+            <Box sx={{
+                height: 8,
+                width: '100%',
+                background: config.gradient
+            }} />
 
-                <CardContent sx={{ p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                        <Chip
-                            icon={config.icon}
-                            label={quest.type.toUpperCase()}
-                            size="small"
-                            sx={{
-                                fontWeight: 'bold',
-                                bgcolor: `${config.color}15`,
-                                color: config.color,
-                                border: `1px solid ${config.color}30`
-                            }}
-                        />
-                        <Chip label={`${quest.xp} XP`} size="small" sx={{ fontWeight: 'bold', bgcolor: '#FFF8E1', color: '#F57F17' }} />
-                    </Box>
-
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                        {quest.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph sx={{ minHeight: 40 }}>
-                        {quest.description}
-                    </Typography>
-
-                    <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {quest.tags.map(tag => (
-                            <Chip key={tag} label={tag} size="small" sx={{ fontSize: '0.7rem', bgcolor: '#F1F3F4' }} />
-                        ))}
-                    </Box>
-
-                    <Button
-                        variant="contained"
-                        fullWidth
+            <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Chip
+                        icon={config.icon}
+                        label={quest.type.toUpperCase()}
+                        size="small"
                         sx={{
-                            borderRadius: 3,
-                            background: config.gradient,
-                            boxShadow: `0 4px 12px ${config.color}40`,
-                            py: 1.2,
-                            fontWeight: 'bold',
-                            '&:hover': {
-                                background: config.gradient,
-                                filter: 'brightness(1.1)',
-                                boxShadow: `0 6px 16px ${config.color}50`,
-                            }
+                            fontWeight: 900,
+                            fontSize: '0.6rem',
+                            bgcolor: 'rgba(255,255,255,0.05)',
+                            color: config.color,
+                            border: `1px solid ${config.color}44`,
+                            borderRadius: 2,
+                            letterSpacing: 1
                         }}
-                        onClick={() => navigate(`/quest/${quest.id}`)}
-                    >
-                        Start Quest
-                    </Button>
-                </CardContent>
-            </Card>
-        </motion.div>
+                    />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontWeight: 900, color: 'primary.main' }}>
+                            {quest.xp}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 900, color: 'text.secondary', fontSize: '0.6rem' }}>
+                            XP
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Typography variant="h5" sx={{ fontWeight: 900, mb: 1.5, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                    {quest.title}
+                </Typography>
+
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4, fontWeight: 500, lineHeight: 1.6, flexGrow: 1 }}>
+                    {quest.description}
+                </Typography>
+
+                <Box sx={{ mb: 4, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {quest.tags.map(tag => (
+                        <Typography
+                            key={tag}
+                            variant="caption"
+                            sx={{
+                                fontWeight: 800,
+                                color: 'text.secondary',
+                                bgcolor: 'rgba(255,255,255,0.03)',
+                                px: 1, py: 0.5, borderRadius: 1,
+                                fontSize: '0.65rem'
+                            }}
+                        >
+                            #{tag.toUpperCase()}
+                        </Typography>
+                    ))}
+                </Box>
+
+                <Button
+                    variant="contained"
+                    fullWidth
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={() => navigate(`/quest/${quest.id}`)}
+                    sx={{
+                        borderRadius: 3,
+                        background: config.gradient,
+                        py: 2,
+                        fontWeight: 900,
+                        letterSpacing: '0.05em',
+                        boxShadow: `0 10px 20px -5px ${config.color}44`,
+                    }}
+                >
+                    INITIALIZE MISSION
+                </Button>
+            </CardContent>
+        </GlassCard>
     );
 };
 

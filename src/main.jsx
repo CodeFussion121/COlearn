@@ -1,18 +1,34 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ThemeProvider, CssBaseline } from '@mui/material';
 import { SquadProvider } from './context/SquadContext';
-import theme from './theme/theme';
+import { isConfigValid } from './firebase';
 import App from './App.jsx'
 import './index.css'
+import GlobalErrorBoundary from './components/GlobalErrorBoundary';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <SquadProvider>
-        <App />
-      </SquadProvider>
-    </ThemeProvider>
-  </StrictMode>,
-)
+const root = createRoot(document.getElementById('root'));
+
+if (!isConfigValid) {
+  root.render(
+    <div style={{
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      fontSize: '24px',
+      color: 'red'
+    }}>
+      Firebase configuration is missing or invalid. Please check your .env file.
+    </div>
+  );
+} else {
+  root.render(
+    <StrictMode>
+      <GlobalErrorBoundary>
+        <SquadProvider>
+          <App />
+        </SquadProvider>
+      </GlobalErrorBoundary>
+    </StrictMode>
+  );
+}

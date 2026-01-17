@@ -52,6 +52,33 @@ export const MOCK_USERS = [
         interests: ['App Dev', 'Java', 'Web Dev'],
         avatar: 'https://i.pravatar.cc/150?u=u6',
         status: 'Looking for Squad'
+    },
+    {
+        id: 'u7',
+        name: 'Arjun Das',
+        branch: 'IT',
+        year: '4th Year',
+        interests: ['System Design', 'Scalability', 'Go'],
+        avatar: 'https://i.pravatar.cc/150?u=u7',
+        status: 'Looking for Squad'
+    },
+    {
+        id: 'u8',
+        name: 'Sarah Khan',
+        branch: 'CSE',
+        year: '1st Year',
+        interests: ['Python', 'Basics', 'C'],
+        avatar: 'https://i.pravatar.cc/150?u=u8',
+        status: 'In Squad'
+    },
+    {
+        id: 'u9',
+        name: 'Ishaan Reddy',
+        branch: 'AI',
+        year: '2nd Year',
+        interests: ['Neural Networks', 'PyTorch', 'Math'],
+        avatar: 'https://i.pravatar.cc/150?u=u9',
+        status: 'Looking for Squad'
     }
 ];
 

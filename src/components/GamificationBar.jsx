@@ -1,71 +1,187 @@
 import React from 'react';
-import { Box, Typography, LinearProgress, Paper, Chip, Avatar, Tooltip, IconButton } from '@mui/material';
+import { Box, Typography, Paper, Divider, LinearProgress, Avatar, IconButton } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useGamification } from '../context/GamificationContext';
+
+import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
+import BatteryChargingFullIcon from '@mui/icons-material/BatteryChargingFull';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import { motion } from 'framer-motion';
-import { useGamification } from '../context/GamificationContext';
 
 const GamificationBar = () => {
-    const { stats, soundEnabled, toggleSound } = useGamification();
+    const { stats, soundEnabled, toggleSound, rewardQueue, clearReward } = useGamification();
 
-    const nextLevelXP = stats.level * 1000;
-    const currentLevelBaseXP = (stats.level - 1) * 1000;
-    const progress = ((stats.xp - currentLevelBaseXP) / 1000) * 100;
+    const xpProgress = ((stats.xp % 1000) / 1000) * 100;
+    const energyProgress = (stats.energy / (stats.maxEnergy || 100)) * 100;
 
     return (
-        <Box sx={{ position: 'fixed', top: 20, right: 20, zIndex: 1200 }}>
-            <motion.div initial={{ y: -50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}>
-                <Paper
-                    elevation={3}
-                    sx={{
-                        p: 1,
-                        pl: 2,
-                        borderRadius: 10,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.3)'
-                    }}
-                >
-                    {/* Level Badge */}
-                    <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <Avatar sx={{ bgcolor: '#4285F4', width: 32, height: 32, fontSize: '0.9rem', fontWeight: 'bold' }}>
-                            {stats.level}
-                        </Avatar>
-                    </Box>
+        <>
+            <Box sx={{ position: 'fixed', top: 24, left: 0, right: 0, px: 4, zIndex: 1200, display: 'flex', justifyContent: 'center' }}>
+                <motion.div initial={{ y: -100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ type: 'spring', damping: 20 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 1.5,
+                            px: 4,
+                            borderRadius: 10,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: { xs: 2, md: 4 },
+                            bgcolor: 'background.glass',
+                            backdropFilter: 'blur(20px)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                            background: (theme) => theme.palette.mode === 'dark'
+                                ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%)'
+                                : 'rgba(255,255,255,0.8)'
+                        }}
+                    >
+                        {/* Level & Player */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ position: 'relative' }}>
+                                <Avatar sx={{
+                                    bgcolor: 'primary.main',
+                                    width: 44,
+                                    height: 44,
+                                    fontSize: '1.1rem',
+                                    fontWeight: 900,
+                                    boxShadow: '0 0 20px rgba(99, 102, 241, 0.6)',
+                                    border: '2px solid rgba(255,255,255,0.2)'
+                                }}>
+                                    {stats.level}
+                                </Avatar>
+                                <Box sx={{
+                                    position: 'absolute',
+                                    bottom: -5,
+                                    right: -5,
+                                    bgcolor: 'secondary.main',
+                                    borderRadius: '50%',
+                                    width: 20,
+                                    height: 20,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '2px solid #000'
+                                }}>
+                                    <Typography sx={{ fontSize: '0.6rem', fontWeight: 900 }}>P</Typography>
+                                </Box>
+                            </Box>
+                            <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                                <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem', color: 'primary.light', letterSpacing: 1.5, textTransform: 'uppercase' }}>{stats.currentTitle || 'NOVICE'}</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 900, mt: -0.5 }}>PLAYER_ONE</Typography>
+                            </Box>
+                        </Box>
 
-                    {/* XP Bar */}
-                    <Box sx={{ width: 100 }}>
-                        <Typography variant="caption" fontWeight="bold" color="text.secondary" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Lvl {stats.level}</span>
-                            <span>{stats.xp} XP</span>
-                        </Typography>
-                        <Tooltip title={`${progress.toFixed(0)}% to Level ${stats.level + 1}`} arrow>
+                        <Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />
+
+                        {/* XP Meter */}
+                        <Box sx={{ width: { xs: 80, sm: 120, md: 160 } }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                                <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem', color: 'primary.light' }}>XP FLOW</Typography>
+                                <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem' }}>{stats.xp % 1000}/1000</Typography>
+                            </Box>
                             <LinearProgress
                                 variant="determinate"
-                                value={progress > 100 ? 100 : progress}
-                                sx={{ height: 6, borderRadius: 3, bgcolor: '#e0e0e0', '& .MuiLinearProgress-bar': { bgcolor: '#F4B400' } }}
+                                value={xpProgress || 0}
+                                sx={{
+                                    height: 8,
+                                    borderRadius: 4,
+                                    bgcolor: 'rgba(255,255,255,0.05)',
+                                    '& .MuiLinearProgress-bar': {
+                                        borderRadius: 4,
+                                        background: 'linear-gradient(90deg, #6366f1, #a855f7)'
+                                    }
+                                }}
                             />
-                        </Tooltip>
-                    </Box>
+                        </Box>
 
-                    {/* Streak */}
-                    <Chip
-                        icon={<LocalFireDepartmentIcon sx={{ color: '#ff7043 !important' }} />}
-                        label={stats.streak}
-                        sx={{ bgcolor: '#fbe9e7', color: '#d84315', fontWeight: 'bold', borderRadius: 4 }}
-                    />
+                        {/* Currency: Coins */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <MonetizationOnIcon sx={{ color: '#fbbf24', fontSize: 24 }} />
+                            <Typography variant="body1" sx={{ fontWeight: 900, color: '#fbbf24' }}>{stats.coins || 0}</Typography>
+                        </Box>
 
-                    {/* Sound Toggle */}
-                    <IconButton size="small" onClick={toggleSound}>
-                        {soundEnabled ? <VolumeUpIcon fontSize="small" /> : <VolumeOffIcon fontSize="small" />}
-                    </IconButton>
-                </Paper>
-            </motion.div>
-        </Box>
+                        {/* Energy Meter */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ width: 80, display: { xs: 'none', md: 'block' } }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.8 }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem', color: '#10b981' }}>ENERGY</Typography>
+                                    <Typography variant="caption" sx={{ fontWeight: 900, fontSize: '0.6rem' }}>{stats.energy}%</Typography>
+                                </Box>
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={energyProgress || 0}
+                                    sx={{
+                                        height: 8,
+                                        borderRadius: 4,
+                                        bgcolor: 'rgba(255,255,255,0.05)',
+                                        '& .MuiLinearProgress-bar': {
+                                            borderRadius: 4,
+                                            background: 'linear-gradient(90deg, #10b981, #34d399)'
+                                        }
+                                    }}
+                                />
+                            </Box>
+                            <BatteryChargingFullIcon sx={{ color: '#10b981', display: { xs: 'block', md: 'none' } }} />
+                        </Box>
+
+                        <Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />
+
+                        {/* Streak */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <motion.div animate={{ scale: [1, 1.2, 1], filter: ['drop-shadow(0 0 0px #f97316)', 'drop-shadow(0 0 8px #f97316)', 'drop-shadow(0 0 0px #f97316)'] }} transition={{ repeat: Infinity, duration: 2 }}>
+                                <LocalFireDepartmentIcon sx={{ color: '#f97316', fontSize: 28 }} />
+                            </motion.div>
+                            <Typography variant="h6" sx={{ fontWeight: 900 }}>{stats.streak || 1}</Typography>
+                        </Box>
+
+                        <Divider orientation="vertical" flexItem sx={{ opacity: 0.1 }} />
+
+                        {/* Sound & Actions */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <IconButton size="small" onClick={toggleSound} sx={{ color: 'text.secondary', '&:hover': { color: 'primary.main', bgcolor: 'rgba(255,255,255,0.05)' } }}>
+                                {soundEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
+                            </IconButton>
+                        </Box>
+                    </Paper>
+                </motion.div>
+            </Box>
+
+            {/* Micro-Rewards Popups */}
+            <Box sx={{ position: 'fixed', top: 120, right: 32, zIndex: 1300, display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-end' }}>
+                <AnimatePresence>
+                    {rewardQueue.map((reward) => (
+                        <motion.div
+                            key={reward.id}
+                            initial={{ x: 100, opacity: 0, scale: 0.8 }}
+                            animate={{ x: 0, opacity: 1, scale: 1 }}
+                            exit={{ x: 50, opacity: 0, scale: 0.8 }}
+                            onAnimationComplete={() => setTimeout(() => clearReward(reward.id), 4000)}
+                        >
+                            <Paper sx={{
+                                p: 2,
+                                px: 4,
+                                borderRadius: 4,
+                                bgcolor: reward.type === 'levelup' ? 'primary.main' : 'secondary.main',
+                                color: 'white',
+                                boxShadow: reward.type === 'levelup' ? '0 10px 40px rgba(99, 102, 241, 0.4)' : '0 10px 30px rgba(16, 185, 129, 0.3)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 2
+                            }}>
+                                <Typography variant="h4" sx={{ mb: -0.5 }}>{reward.type === 'levelup' ? '⭐' : '🏆'}</Typography>
+                                <Box>
+                                    <Typography variant="caption" sx={{ fontWeight: 900, opacity: 0.8, letterSpacing: 1.5 }}>ACHIEVEMENT UNLOCKED</Typography>
+                                    <Typography variant="body1" fontWeight="900" sx={{ mt: -0.5 }}>{reward.message}</Typography>
+                                </Box>
+                            </Paper>
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+            </Box>
+        </>
     );
 };
 
